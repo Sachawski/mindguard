@@ -1,19 +1,17 @@
-package com.example.mindguard.ui.home
+package com.example.mindguard.ui.fragment
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.example.mindguard.BuildConfig
-import com.example.mindguard.R
 import com.example.mindguard.databinding.FragmentHomeBinding
-import com.example.mindguard.viewmodel.HomeViewModel
-import com.tomtom.sdk.map.display.MapOptions
-import com.tomtom.sdk.map.display.ui.MapFragment
-
+import com.example.mindguard.ui.viewmodel.HomeViewModel
 
 
 class HomeFragment : Fragment() {
@@ -39,6 +37,12 @@ class HomeFragment : Fragment() {
         homeViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
         }
+
+        homeViewModel.showInputDialog.observe(viewLifecycleOwner, Observer { shouldShow ->
+            if (shouldShow) {
+                showInputDialog(homeViewModel)
+            }
+        })
         return root
 
     }
@@ -48,4 +52,21 @@ class HomeFragment : Fragment() {
         _binding = null
     }
 
+
+    private fun showInputDialog(homeViewModel : HomeViewModel) {
+        val inputEditText = EditText(this.context)
+        val dialog = AlertDialog.Builder(this.context)
+            .setTitle("Username")
+            .setMessage("Please enter your username")
+            .setView(inputEditText)
+            .setPositiveButton("OK") { dialogInterface, which ->
+                val userInput = inputEditText.text.toString()
+                homeViewModel.setUserInput(userInput)
+            }
+            .setNegativeButton("Annuler") { dialogInterface, which ->
+                println("L'utilisateur a annulé.")
+            }
+            .create()
+        dialog.show()
+    }
 }

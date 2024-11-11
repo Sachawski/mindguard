@@ -1,4 +1,4 @@
-package com.example.mindguard.logic
+package com.example.mindguard.data.model
 
 enum class State {
     WORKING,

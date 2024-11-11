@@ -1,4 +1,4 @@
-package com.example.mindguard.ui.workplace
+package com.example.mindguard.ui.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.mindguard.BuildConfig
 import com.example.mindguard.R
 import com.example.mindguard.databinding.FragmentWorkplaceBinding
-import com.example.mindguard.viewmodel.WorkplaceViewModel
+import com.example.mindguard.ui.viewmodel.WorkplaceViewModel
 import com.tomtom.sdk.map.display.MapOptions
 import com.tomtom.sdk.map.display.ui.MapFragment
 

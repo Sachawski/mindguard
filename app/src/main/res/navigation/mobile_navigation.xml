@@ -7,19 +7,19 @@
 
     <fragment
         android:id="@+id/nav_home"
-        android:name="com.example.mindguard.ui.home.HomeFragment"
+        android:name="com.example.mindguard.ui.fragment.HomeFragment"
         android:label="@string/menu_home"
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/nav_gallery"
-        android:name="com.example.mindguard.ui.friends.FriendsFragment"
+        android:id="@+id/nav_friends"
+        android:name="com.example.mindguard.ui.fragment.FriendsFragment"
         android:label="@string/menu_friends"
         tools:layout="@layout/fragment_friends" />
 
     <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="com.example.mindguard.ui.workplace.WorkplaceFragment"
+        android:id="@+id/nav_workplace"
+        android:name="com.example.mindguard.ui.fragment.WorkplaceFragment"
         android:label="@string/menu_workplace"
         tools:layout="@layout/fragment_workplace" />
 </navigation>
