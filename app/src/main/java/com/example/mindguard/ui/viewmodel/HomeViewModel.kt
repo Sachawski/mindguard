@@ -15,10 +15,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val filePath = application.applicationContext.filesDir
     private val userRepository : UserRepository = UserRepository(filePath)
+    private lateinit var user : LiveData<User>
 
     private val _showInputDialog = MutableLiveData<Boolean>()
     val showInputDialog: LiveData<Boolean> get() = _showInputDialog
-    private val _userInput = MutableLiveData<String>()
     private val _text = MutableLiveData<String>().apply {value = "This is home Fragment"}
     val text: LiveData<String> = _text
 
@@ -28,7 +28,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun loadUser(){
         if (!userRepository.userExists()){
+            Log.d("a","ataearae")
             showDialog()
+
         }
     }
 
@@ -37,10 +39,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setUserInput(input: String) {
-        val user = userRepository.initializeUser(input)
+        user = userRepository.initializeUser(input)
+        _showInputDialog.value = false
     }
-
-
 
 }
 

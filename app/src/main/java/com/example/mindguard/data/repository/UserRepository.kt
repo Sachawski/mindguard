@@ -34,12 +34,13 @@ class UserRepository(private val filesDir : File) {
 
     }
 
-    fun saveUser(userLiveData : MutableLiveData<User>){
+    fun saveUser(userLiveData : LiveData<User>){
         val user = userLiveData.value
         if (user != null) {
             val jsonString = Json.encodeToString(User.serializer(), user)
             Log.i("serialized : ", jsonString)
             filePath.writeText(jsonString)
+            Log.d("saving",jsonString)
         }
     }
 

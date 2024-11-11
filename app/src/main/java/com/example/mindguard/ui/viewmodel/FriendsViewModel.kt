@@ -13,28 +13,43 @@ class FriendsViewModel(application: Application) : AndroidViewModel(application)
 
     private val filePath = application.applicationContext.filesDir
     private val userRepository : UserRepository = UserRepository(filePath)
+    private lateinit var user : MutableLiveData<User>
 
-    private val _text = MutableLiveData<String>().apply {
-        value = "Friend list :"
-    }
-    val text: LiveData<String> = _text
-    private val _friendList = MutableLiveData<List<String>>()
+    private val _uuid = MutableLiveData<String>()
+    val uuid: LiveData<String> = _uuid
+    private var _friendList = MutableLiveData<List<String>>()
     val friendList: LiveData<List<String>> = _friendList
 
     init {
         loadUserData()
+        observeData()
     }
 
     private fun loadUserData() {
-        Log.d("debugging","loading data to the view model")
-        userRepository.getUser().observeForever { user ->
+        user = userRepository.getUser() as MutableLiveData<User>
+    }
+
+    private fun observeData(){
+        user.observeForever { user ->
             try {
                 _friendList.value =
                     user.getFriendList()
+                _uuid.value =
+                    user.getId()
+
             } catch (exception : Exception) {
                 Log.d("debugging",exception.toString())
             }
+        }
     }
-        Log.d("debugging","observing")
+
+    fun addFriendToUser(uuid : String){
+        Log.d("check","check")
+        user.value?.let {
+            it.addFriend(uuid)
+            _friendList.value = it.getFriendList()
+            userRepository.saveUser(user)
+        }
     }
+
 }

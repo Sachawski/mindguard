@@ -6,7 +6,8 @@
     <string name="nav_header_subtitle">Enhance your life</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
-
+    <string name="uuid_hint"> Enter your friend\'s UUID</string>
+    <string name="text_friends"> Friends List : </string>
     <string name="menu_home">Home</string>
     <string name="menu_friends">Friends</string>
     <string name="menu_workplace">Workplace</string>
