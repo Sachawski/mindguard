@@ -40,7 +40,6 @@ class FriendsFragment : Fragment() {
                 uuidView.text = "Your UUID : $it"
             }
 
-
             val inputText : EditText = binding.inputUuid
             inputText.setOnEditorActionListener { _, actionId, event ->
                 if (actionId == EditorInfo.IME_ACTION_DONE ||
@@ -60,9 +59,7 @@ class FriendsFragment : Fragment() {
             val adapter = ArrayAdapter<String>(requireContext(), R.layout.simple_list_item_1, mutableListOf())
             friendListView.adapter = adapter
             friendsViewModel.friendList.observe(viewLifecycleOwner) { friendList ->
-                Log.d("modifyyyyy","atazeta")
                 adapter.clear()
-                //adapter.addAll(friendList)
                 adapter.addAll(friendList)
                 adapter.notifyDataSetChanged()
             }

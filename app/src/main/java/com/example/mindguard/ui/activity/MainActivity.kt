@@ -1,4 +1,4 @@
-package com.example.mindguard
+package com.example.mindguard.ui.activity
 
 import android.os.Bundle
 import android.view.Menu
@@ -11,6 +11,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
+import com.example.mindguard.R
 import com.example.mindguard.data.repository.UserRepository
 import com.example.mindguard.databinding.ActivityMainBinding
 import java.io.File
