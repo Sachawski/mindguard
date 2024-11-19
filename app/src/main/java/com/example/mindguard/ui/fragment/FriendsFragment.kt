@@ -2,6 +2,7 @@ package com.example.mindguard.ui.fragment
 
 import android.R
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -14,6 +15,7 @@ import android.widget.EditText
 import android.widget.ListView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.mindguard.databinding.FragmentFriendsBinding
 import com.example.mindguard.ui.viewmodel.FriendsViewModel

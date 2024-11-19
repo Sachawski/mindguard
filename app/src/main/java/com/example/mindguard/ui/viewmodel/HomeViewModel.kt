@@ -36,7 +36,6 @@ class HomeViewModel(private val application: Application) : AndroidViewModel(app
             _user = userRepository.getUser() as MutableLiveData<User>
             _user.value!!.setUsageStats(usageStats)
             userRepository.saveUser(_user)
-            Log.d("test",usageStats.map {"${it.first}: ${it.second}"}.toString())
         }
     }
 
