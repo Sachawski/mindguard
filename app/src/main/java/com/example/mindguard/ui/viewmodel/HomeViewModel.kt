@@ -20,8 +20,6 @@ class HomeViewModel(private val application: Application) : AndroidViewModel(app
 
     private val _showInputDialog = MutableLiveData<Boolean>()
     val showInputDialog: LiveData<Boolean> get() = _showInputDialog
-    //private var _usageStats = MutableLiveData<List<Pair<String,Long>>>()
-    //val usageStats: LiveData<List<Pair<String,Long>>> = _usageStats
 
     init {
         loadUserData()

@@ -28,7 +28,7 @@ class BluetoothRepository(private val context : Context) {
         return bluetoothService.stopDeviceLeScan()
     }
 
-    fun startAdvertise(data : String) : Boolean {
+    fun startAdvertie(data : String) : Boolean {
         return bluetoothService.startLeAdvertise(data)
     }
 

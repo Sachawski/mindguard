@@ -32,7 +32,6 @@ class BluetoothService(private val context : Context){
     private val advertiseSettings = AdvertiseSettings.Builder()
         .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY) // Low latency advertisement
         .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM) // Medium TX power
-        .setConnectable(true) // Allow devices to connect
         .build()
 
     private val _devices : MutableLiveData<List<ScannedDevice>> = MutableLiveData(mutableListOf())
@@ -51,7 +50,6 @@ class BluetoothService(private val context : Context){
                 }
             }
             val device = result.device
-            //Log.d("device name to :",device.name)
             if (device.name != null){
                 Log.d("device name to :",device.name)
             }
@@ -133,8 +131,7 @@ class BluetoothService(private val context : Context){
             }
         }
         val advertiseData = AdvertiseData.Builder()
-            //.setIncludeDeviceName(true) // Include the device name in the advertisement
-            .addServiceUuid(ParcelUuid.fromString(data)) // Example UUID (Generic Access)
+            .addServiceUuid(ParcelUuid.fromString(data))
             .build()
 
         bluetoothLeAdvertiser?.startAdvertising(advertiseSettings, advertiseData,advertiseCallback)
