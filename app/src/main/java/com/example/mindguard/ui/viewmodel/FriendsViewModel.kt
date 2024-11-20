@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.example.mindguard.data.model.Friend
 import com.example.mindguard.data.model.User
 import com.example.mindguard.data.repository.BluetoothRepository
 import com.example.mindguard.data.repository.UserRepository
@@ -22,8 +23,11 @@ class FriendsViewModel(private val application: Application) : AndroidViewModel(
     private val _uuid = MutableLiveData<String>()
     val uuid: LiveData<String> = _uuid
 
-    private var _friendList = MutableLiveData<List<String>>()
-    val friendList: LiveData<List<String>> = _friendList
+    private var _friendList = MutableLiveData<List<Friend>>()
+    val friendList: LiveData<List<Friend>> = _friendList
+
+    private var _isWithFriends = MutableLiveData<Boolean>()
+    var isWithFriends : LiveData<Boolean> = _isWithFriends
 
     private val scanInterval: Long = 10000
     //private val pauseInterval: Long = 120000
@@ -31,11 +35,15 @@ class FriendsViewModel(private val application: Application) : AndroidViewModel(
     private val handler = Handler(Looper.getMainLooper())
 
     private val startScanRunnable = Runnable {
+        Log.d("devices startscan : ",bluetoothRepository.getDevices().value.toString())
+        _isWithFriends.value = checkFriends()
         bluetoothRepository.startScan()
         scheduleStopScan()
     }
 
     private val stopScanRunnable = Runnable {
+        Log.d("devices stopscan: ",bluetoothRepository.getDevices().value.toString())
+        _isWithFriends.value = checkFriends()
         bluetoothRepository.stopScan()
         scheduleStartScan()
     }
@@ -53,28 +61,35 @@ class FriendsViewModel(private val application: Application) : AndroidViewModel(
     init {
         loadUserData()
         observeData()
+        _isWithFriends.value = checkFriends()
         scheduleStartScan()
         scheduleStartAdvertise()
     }
 
     private fun scheduleStartScan(){
-        Log.i("Bluetooth devices" , bluetoothRepository.getDevices().value.toString())
         handler.postDelayed(startScanRunnable, scanInterval)
     }
 
     private fun scheduleStopScan(){
-        Log.i("Bluetooth devices" , bluetoothRepository.getDevices().value.toString())
         handler.postDelayed(stopScanRunnable, scanInterval)
     }
 
     private fun scheduleStartAdvertise(){
-        Log.i("adv","Schedule start in VM")
         handler.postDelayed(startAdvertiseRunnable, scanInterval)
     }
 
     private fun scheduleStopAdvertise(){
-            Log.i("adv" ,"Schedule stop in VM")
-            handler.postDelayed(stopAdvertiseRunnable, scanInterval)
+        handler.postDelayed(stopAdvertiseRunnable, scanInterval)
+    }
+
+    private fun checkFriends() : Boolean {
+        val devices = bluetoothRepository.getDevices().value
+        if (devices != null) {
+            for (device in devices){
+                return _friendList.value?.map{it.uuid}?.contains(device.data) == true
+            }
+        }
+        return false
     }
 
     private fun loadUserData() {
@@ -94,9 +109,18 @@ class FriendsViewModel(private val application: Application) : AndroidViewModel(
         }
     }
 
-    fun addFriendToUser(uuid : String){
+    fun addFriendToUser(name : String, uuid : String){
         _user.value?.let {
-            it.addFriend(uuid)
+            val friend = Friend(name,uuid)
+            it.addFriend(friend)
+            _friendList.value = it.getFriendList()
+            userRepository.saveUser(_user)
+        }
+    }
+
+    fun removeFriendFromUser(friend:Friend){
+        _user.value?.let {
+            it.deleteFriend(friend)
             _friendList.value = it.getFriendList()
             userRepository.saveUser(_user)
         }

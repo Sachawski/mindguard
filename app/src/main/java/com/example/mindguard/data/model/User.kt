@@ -11,7 +11,7 @@ class User(val name : String) {
     private var id : String =  UUID.randomUUID().toString()
     private var position : Int = 0
     private var state : State = State.IDLE
-    private var _friendList : MutableList<String> = mutableListOf()
+    private var _friendList : MutableList<Friend> = mutableListOf()
     private var workplace : Int = 0
     private var usageStats : List<Pair<String,Long>> = listOf()
     private var updateDay : String
@@ -34,8 +34,8 @@ class User(val name : String) {
         return state
     }
 
-    fun getFriendList() : List<String> {
-        val immutableFriendList : List<String> = _friendList
+    fun getFriendList() : List<Friend> {
+        val immutableFriendList : List<Friend> = _friendList
         return immutableFriendList
     }
 
@@ -71,14 +71,14 @@ class User(val name : String) {
         return totalScreenTime
     }
 
-    fun addFriend(uuid : String){
-        if (!_friendList.contains(uuid)) {
-            _friendList.add(uuid)
+    fun addFriend(friend : Friend){
+        if (!_friendList.contains(friend)) {
+            _friendList.add(friend)
         }
     }
 
-    fun deleteFriends(uuid : String){
-        _friendList.remove(uuid)
+    fun deleteFriend(friend : Friend){
+        _friendList.remove(friend)
     }
 
 

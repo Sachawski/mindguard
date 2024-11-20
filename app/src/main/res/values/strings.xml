@@ -11,4 +11,6 @@
     <string name="menu_home">Home</string>
     <string name="menu_friends">Friends</string>
     <string name="menu_workplace">Workplace</string>
+    <string name="bin">bin</string>
+    <string name="name_hint">Enter your friend\'s name</string>
 </resources>

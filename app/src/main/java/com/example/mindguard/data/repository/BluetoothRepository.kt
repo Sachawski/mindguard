@@ -19,12 +19,10 @@ class BluetoothRepository(private val context : Context) {
     }
 
     fun startScan() : Boolean {
-        Log.d("Bluetooth :","Scanning launched from repository")
         return bluetoothService.startDeviceLeScan()
     }
 
     fun stopScan() : Boolean {
-        Log.d("Bluetooth :","Scanning stopped from repository")
         return bluetoothService.stopDeviceLeScan()
     }
 

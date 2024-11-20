@@ -16,6 +16,7 @@ import android.os.Build
 import android.os.ParcelUuid
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.mindguard.data.model.ScannedDevice
@@ -36,6 +37,7 @@ class BluetoothService(private val context : Context){
 
     private val _devices : MutableLiveData<List<ScannedDevice>> = MutableLiveData(mutableListOf())
     val devices : LiveData<List<ScannedDevice>> = _devices
+
     private val expirationTime = 10000L
 
     private val leScanCallback: ScanCallback = object : ScanCallback() {
@@ -46,21 +48,41 @@ class BluetoothService(private val context : Context){
                         Manifest.permission.BLUETOOTH_CONNECT
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
+                    Log.d("device name to :","nope")
                     return
                 }
             }
             val device = result.device
-            if (device.name != null){
-                Log.d("device name to :",device.name)
-            }
             val existingDevice = _devices.value?.find { it.device.address == device.address }
+            val payload : Map<ParcelUuid, ByteArray>? = result.scanRecord?.serviceData
 
-            if (existingDevice != null) {
-                existingDevice.lastSeen = System.currentTimeMillis()
-            } else {
-                addDeviceToList(ScannedDevice(device.name,device, System.currentTimeMillis()))
+            Log.d("payload",payload.toString())
+            if (payload != null) {
+                for (data in payload){
+                    Log.d("data",data.toString())
+                    val key = data.key.toString() //Service UUID (friend's ID)
+                    val value = String(data.value) //Byte array back to string
+                    Log.d("key/value","$key / $value")
+                    if (value.startsWith("mindguard")){
+                        if (existingDevice != null) {
+                            existingDevice.lastSeen = System.currentTimeMillis()
+                        } else {
+                            addDeviceToList(ScannedDevice(device.name,device,key, System.currentTimeMillis()))
+                        }
+                    }
+                }
             }
+
             cleanUpDeviceList()
+        }
+        override fun onScanFailed(errorCode: Int) {
+            when (errorCode) {
+                SCAN_FAILED_ALREADY_STARTED -> Log.e("BLEScan", "Scan already started")
+                SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> Log.e("BLEScan", "App registration failed")
+                SCAN_FAILED_INTERNAL_ERROR -> Log.e("BLEScan", "Internal error occurred")
+                SCAN_FAILED_FEATURE_UNSUPPORTED -> Log.e("BLEScan", "Feature not supported")
+                else -> Log.e("BLEScan", "Unknown scan error: $errorCode")
+            }
         }
     }
 
@@ -72,7 +94,21 @@ class BluetoothService(private val context : Context){
 
         override fun onStartFailure(errorCode: Int) {
             super.onStartFailure(errorCode)
-            Log.i("adv","Advertising failed with error code: $errorCode")
+            if (errorCode == ADVERTISE_FAILED_INTERNAL_ERROR){
+                Log.e("adv","Internal error: $errorCode")
+            }
+            if (errorCode == ADVERTISE_FAILED_ALREADY_STARTED){
+                Log.e("adv","Already started: $errorCode")
+            }
+            if (errorCode == ADVERTISE_FAILED_DATA_TOO_LARGE){
+                Log.e("adv","Data too large: $errorCode")
+            }
+            if (errorCode == ADVERTISE_FAILED_FEATURE_UNSUPPORTED){
+                Log.e("adv","Feature unsupported: $errorCode")
+            }
+            if (errorCode == ADVERTISE_FAILED_TOO_MANY_ADVERTISERS){
+                Log.e("adv","Too many advertiser: $errorCode")
+            }
         }
     }
 
@@ -122,20 +158,17 @@ class BluetoothService(private val context : Context){
 
     fun startLeAdvertise(data : String) : Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (ActivityCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.BLUETOOTH_SCAN
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 return false
             }
         }
         val advertiseData = AdvertiseData.Builder()
-            .addServiceUuid(ParcelUuid.fromString(data))
+            .addServiceData(ParcelUuid.fromString(data),"mindguard".toByteArray()) // data is mindguard+user's uuid
             .build()
 
         bluetoothLeAdvertiser?.startAdvertising(advertiseSettings, advertiseData,advertiseCallback)
-        Log.i("adv","Advertising started successfully")
         return true
     }
 
@@ -150,7 +183,6 @@ class BluetoothService(private val context : Context){
             }
         }
         bluetoothLeAdvertiser?.stopAdvertising(advertiseCallback)
-        Log.i("adv","Advertising stopped successfully")
         return true
     }
 

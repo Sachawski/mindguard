@@ -1,8 +1,7 @@
 package com.example.mindguard.ui.fragment
 
-import android.R
 import android.annotation.SuppressLint
-import android.app.Activity
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -10,16 +9,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import android.widget.ArrayAdapter
+import android.widget.AdapterView
+import android.widget.AdapterView.OnItemClickListener
 import android.widget.EditText
 import android.widget.ListView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.example.mindguard.data.model.Friend
 import com.example.mindguard.databinding.FragmentFriendsBinding
-import com.example.mindguard.ui.viewmodel.FriendsViewModel
 import com.example.mindguard.ui.Tools
+import com.example.mindguard.ui.activity.FriendsAdapter
+import com.example.mindguard.ui.viewmodel.FriendsViewModel
+
 
 class FriendsFragment : Fragment() {
 
@@ -42,29 +45,52 @@ class FriendsFragment : Fragment() {
                 uuidView.text = "Your UUID : $it"
             }
 
-            val inputText : EditText = binding.inputUuid
-            inputText.setOnEditorActionListener { _, actionId, event ->
+            val inputNameText : EditText = binding.inputName
+            val inputUuidText : EditText = binding.inputUuid
+            inputUuidText.setOnEditorActionListener { _, actionId, event ->
                 if (actionId == EditorInfo.IME_ACTION_DONE ||
                     actionId == EditorInfo.IME_ACTION_SEND ||
                     actionId == EditorInfo.IME_ACTION_NEXT ||
                     (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
-                    val text = inputText.text.toString()
-                    friendsViewModel.addFriendToUser(text)
-                    tools.hideKeyboard(context,binding.inputUuid)
+                    val name = inputNameText.text.toString()
+                    val uuid = inputUuidText.text.toString()
+                    if (name.isNotEmpty() && uuid.isNotEmpty()) {
+                        friendsViewModel.addFriendToUser(name, uuid)
+                        tools.hideKeyboard(context, binding.inputUuid)
+                        inputNameText.text.clear()
+                        inputUuidText.text.clear()
+                    }
                     true
                 } else {
                     false
                 }
             }
 
+            val isWithFriendsView: TextView = binding.isWithFriends
+            friendsViewModel.isWithFriends.observe(viewLifecycleOwner) { isWithFriends ->
+                if (isWithFriends) {
+                    isWithFriendsView.text = "You are with your friends"
+                } else {
+                    isWithFriendsView.text = "You are not with your friends"
+                }
+
+            }
+
             val friendListView: ListView = binding.listFriend
-            val adapter = ArrayAdapter<String>(requireContext(), R.layout.simple_list_item_1, mutableListOf())
+
+            friendListView.setOnItemClickListener { parent, view, position, id ->
+                friendsViewModel.friendList.value?.get(position).let { showFriendDialog(it,friendsViewModel) }
+            }
+
+            val adapter = FriendsAdapter(requireContext(), mutableListOf())
             friendListView.adapter = adapter
             friendsViewModel.friendList.observe(viewLifecycleOwner) { friendList ->
                 adapter.clear()
                 adapter.addAll(friendList)
                 adapter.notifyDataSetChanged()
             }
+
+
 
             return root
         }
@@ -73,5 +99,24 @@ class FriendsFragment : Fragment() {
             super.onDestroyView()
             _binding = null
         }
+
+        private fun showFriendDialog(friend : Friend?, friendsViewModel: FriendsViewModel){
+            if (friend != null) {
+                val builder: AlertDialog.Builder = AlertDialog.Builder(context)
+                builder
+                    .setTitle("Friend name : " + friend.name)
+                    .setPositiveButton("Cancel") { dialog, which ->
+                    }
+                    .setNegativeButton("Delete Friends") { dialog, which ->
+                        friendsViewModel.removeFriendFromUser(friend)
+                    }
+                    .setItems(arrayOf("UUID : " + friend.uuid)) { _, _ ->
+                    }
+
+                val dialog: AlertDialog = builder.create()
+                dialog.show()
+            }
+        }
+
 
 }
