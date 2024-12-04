@@ -1,5 +1,6 @@
 package com.example.mindguard.data.model
 
+import android.util.Log
 import kotlinx.serialization.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -14,6 +15,15 @@ class User(val name : String) {
     private var _friendList : MutableList<Friend> = mutableListOf()
     private var workplace : Int = 0
     private var usageStats : List<Pair<String,Long>> = listOf()
+
+    // screenTimeInfos contains list of pair for each state the user can be in.
+    // Those pairs contains a start time and a end time, allowing to compute the total screen time
+    // for a given state
+    private var todayTimeInfo : TimeInfo = TimeInfo()
+    private var timeInfoHistory : MutableList<TimeInfo> = mutableListOf()
+    private var todayAttentionScore : Double = 100.0
+    private var AttentionScoreHistory : MutableList<Double> = mutableListOf()
+
     private var updateDay : String
 
     init {
@@ -47,12 +57,38 @@ class User(val name : String) {
         return usageStats
     }
 
-    fun setPosition(newPosition : Int){
-        position = newPosition
+
+
+    fun getScreenTimeInfos() : TimeInfo{
+        return todayTimeInfo
     }
 
-    fun setState(newPosition : Int){
-        position = newPosition
+    fun addScreenTime(timePair : Pair<Long,Long>, state : State){
+        when (state){
+            State.IDLE -> todayTimeInfo.addIdleScreenTime(timePair)
+            State.SOCIALLY_ENGAGED -> todayTimeInfo.addSocialScreenTime(timePair)
+            State.WORKING -> todayTimeInfo.addWorkScreenTime(timePair)
+        }
+    }
+
+    fun getAttentionScore() {
+
+    }
+
+
+    fun screenTimeDailyUpdate(){
+        timeInfoHistory.add(todayTimeInfo)
+        todayTimeInfo = TimeInfo()
+    }
+
+    fun attentionScoreDailyUpdate(){
+        timeInfoHistory.add(todayTimeInfo)
+        todayTimeInfo = TimeInfo()
+    }
+
+    fun setState(newState : State){
+        state = newState
+        Log.d("changed state to",newState.toString())
     }
 
     fun setWorkplace(newWorkplace : Int){

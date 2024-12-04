@@ -12,6 +12,7 @@ import com.example.mindguard.R
 import com.example.mindguard.databinding.FragmentWorkplaceBinding
 import com.example.mindguard.ui.viewmodel.WorkplaceViewModel
 import com.tomtom.sdk.map.display.MapOptions
+import com.tomtom.sdk.map.display.TomTomMap
 import com.tomtom.sdk.map.display.ui.MapFragment
 
 class WorkplaceFragment : Fragment() {
@@ -35,11 +36,18 @@ class WorkplaceFragment : Fragment() {
             textView.text = it
         }
 
-        val mapOptions = MapOptions(mapKey = BuildConfig.TOMTOM_API_KEY)
+        val mapOptions = workplaceViewModel.getMapOptions()
         val mapFragment = MapFragment.newInstance(mapOptions)
         childFragmentManager.beginTransaction()
             .replace(R.id.map_container, mapFragment)
             .commit()
+
+        mapFragment.getMapAsync { tomtomMap: TomTomMap ->
+
+
+        }
+
+
 
         return root
 

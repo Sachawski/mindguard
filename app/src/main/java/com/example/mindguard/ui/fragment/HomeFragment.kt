@@ -4,6 +4,7 @@ import android.R
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +17,12 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.mindguard.databinding.FragmentHomeBinding
 import com.example.mindguard.ui.viewmodel.HomeViewModel
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
+import org.w3c.dom.Text
 
 
 class HomeFragment : Fragment() {
@@ -34,6 +41,41 @@ class HomeFragment : Fragment() {
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
+
+
+        val barChart : BarChart = binding.barChart
+        val entries = mutableListOf<BarEntry>()
+        entries.add(BarEntry(0f, 10f)) // x = 0, y = 10
+        entries.add(BarEntry(1f, 20f)) // x = 1, y = 20
+        entries.add(BarEntry(2f, 15f)) // x = 2, y = 15
+        entries.add(BarEntry(3f, 25f)) // x = 3, y = 25
+        val barDataSet = BarDataSet(entries, "My Data Set")
+        barDataSet.color = resources.getColor(R.color.holo_purple, null)  // Couleur des barres
+        val barData = BarData(barDataSet)
+        barChart.data = barData
+        barChart.description.text = "Example BarChart"  // Description
+        barChart.animateY(1000)  // Animation sur l'axe Y
+        // Configurer les axes (facultatif)
+        barChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        barChart.xAxis.setDrawGridLines(false)
+        barChart.axisLeft.setDrawGridLines(false)
+        barChart.axisRight.isEnabled = false  // Désactiver l'axe Y droit
+
+
+        val idleScreenTimeView: TextView = binding.idleScreenTime
+        val socialScreenTimeView: TextView = binding.socialScreenTime
+        val workScreenTimeView: TextView = binding.workScreenTime
+
+        homeViewModel.getUser().observe(viewLifecycleOwner) { user ->
+            idleScreenTimeView.text =
+                homeViewModel.formatMillisToHoursAndMinutes(user.getScreenTimeInfos().getTotalIdleScreenTime())
+            Log.d("idle",user.getScreenTimeInfos().getTotalIdleScreenTime().toString())
+            socialScreenTimeView.text =
+                homeViewModel.formatMillisToHoursAndMinutes(user.getScreenTimeInfos().getTotalSocialScreenTime())
+            workScreenTimeView.text =
+                homeViewModel.formatMillisToHoursAndMinutes(user.getScreenTimeInfos().getTotalWorkScreenTime())
+
+        }
 
         val totalScreenTimeView: TextView = binding.totalScreenTime
         if (homeViewModel.isAccessGranted(this.context)) {
