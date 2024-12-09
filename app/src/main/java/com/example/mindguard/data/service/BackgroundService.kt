@@ -11,9 +11,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import com.example.mindguard.BuildConfig
 import com.example.mindguard.data.model.State
 import com.example.mindguard.data.repository.BluetoothRepository
 import com.example.mindguard.data.repository.UserRepository
@@ -22,7 +20,6 @@ import com.google.android.gms.location.LocationListener
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import com.kakao.vectormap.KakaoMapSdk
 import java.io.File
 
 class BackgroundService() : Service()  {
@@ -45,9 +42,6 @@ class BackgroundService() : Service()  {
     private lateinit var locationThread : HandlerThread
     private lateinit var locationHandler : Handler
 
-    private val scanInterval: Long = 10000
-
-
     private var tempWithoutScreenStartTime : Long = System.currentTimeMillis()
     private var tempWithoutScreenEndTime : Long = System.currentTimeMillis()
     private var tempScreenStartTime : Long = System.currentTimeMillis()
@@ -55,6 +49,7 @@ class BackgroundService() : Service()  {
 
     private var isAtWork = false
     private var isWithFriends = false
+    private val scanInterval: Long = 10000
 
     override fun onCreate() {
         super.onCreate()
@@ -80,7 +75,7 @@ class BackgroundService() : Service()  {
         locationThread.start()
         locationHandler = Handler(locationThread.looper)
 
-        startLocationUpdates()
+        startLocationService()
         scheduleStartScan()
         scheduleStartAdvertise()
         scheduleCheckForFriends()
@@ -99,17 +94,9 @@ class BackgroundService() : Service()  {
 
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
+    override fun onBind(intent: Intent?):    IBinder? {
         return null
     }
-
-    /*
-    private fun periodicCheckForWorkplace() {
-        locationHandler.postDelayed({
-            getLocation()
-        },scanInterval)
-    }
-    */
 
     private fun launchingScreenTimeRecorder() {
         screenTimeHandler.post {
@@ -177,6 +164,9 @@ class BackgroundService() : Service()  {
         scheduleCheckForFriends()
     }
 
+    private val checkForWorkplaceRunnable = Runnable {
+    }
+
     private fun scheduleStartScan(){
         Log.d("bluetooth","scheduled")
         bluetoothHandler.postDelayed(startScanRunnable, scanInterval)
@@ -209,12 +199,6 @@ class BackgroundService() : Service()  {
     }
 
     private fun checkWorkplace() : Boolean {
-        val devices = bluetoothRepository.getDevices().value
-        if (devices != null) {
-            for (device in devices){
-                return UserRepository.user.value?.getFriendList()?.map{it.uuid}?.contains(device.data) == true
-            }
-        }
         return false
     }
 
@@ -230,7 +214,7 @@ class BackgroundService() : Service()  {
 
     }
 
-    private fun startLocationUpdates() {
+    private fun startLocationService() {
         val locationRequest : LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY,1000).build()
         val locationListener : LocationListener = LocationListener { location ->
             Log.d("Loc",location.latitude.toString() + " " + location.longitude.toString())
@@ -257,6 +241,5 @@ class BackgroundService() : Service()  {
             locationListener,
             locationThread.looper)
     }
-
 
 }
