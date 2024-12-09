@@ -1,17 +1,28 @@
 package com.example.mindguard.data.service
 
+import android.Manifest
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import com.example.mindguard.BuildConfig
 import com.example.mindguard.data.model.State
 import com.example.mindguard.data.repository.BluetoothRepository
 import com.example.mindguard.data.repository.UserRepository
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationListener
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.kakao.vectormap.KakaoMapSdk
 import java.io.File
 
 class BackgroundService() : Service()  {
@@ -20,6 +31,7 @@ class BackgroundService() : Service()  {
     private lateinit var userRepository : UserRepository
     private lateinit var bluetoothRepository : BluetoothRepository
     private lateinit var midnightTaskManager: MidnightTaskManager
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private lateinit var friendThread : HandlerThread
     private lateinit var friendHandler : Handler
@@ -29,6 +41,9 @@ class BackgroundService() : Service()  {
 
     private lateinit var screenTimeThread : HandlerThread
     private lateinit var screenTimeHandler : Handler
+
+    private lateinit var locationThread : HandlerThread
+    private lateinit var locationHandler : Handler
 
     private val scanInterval: Long = 10000
 
@@ -47,6 +62,7 @@ class BackgroundService() : Service()  {
         userRepository = UserRepository(filePath)
         bluetoothRepository = BluetoothRepository(applicationContext)
         midnightTaskManager = MidnightTaskManager(applicationContext)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         friendThread = HandlerThread("Friend Thread")
         friendThread.start()
@@ -60,10 +76,15 @@ class BackgroundService() : Service()  {
         screenTimeThread.start()
         screenTimeHandler = Handler(screenTimeThread.looper)
 
+        locationThread = HandlerThread("Friend Thread")
+        locationThread.start()
+        locationHandler = Handler(locationThread.looper)
+
+        startLocationUpdates()
         scheduleStartScan()
         scheduleStartAdvertise()
-        periodicCheckForFriends()
-        periodicCheckForWorkplace()
+        scheduleCheckForFriends()
+        //periodicCheckForWorkplace()
         launchingScreenTimeRecorder()
     }
 
@@ -78,30 +99,17 @@ class BackgroundService() : Service()  {
 
     }
 
-    private fun periodicCheckForFriends() {
-        friendHandler.postDelayed({
-            if (checkForFriends()) {
-                isWithFriends = true
-            }
-            isWithFriends = true
-            setState(isWithFriends,isAtWork)
-            Thread.sleep(scanInterval)
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
+    }
 
-            isWithFriends = false
-            setState(isWithFriends,isAtWork)
-
+    /*
+    private fun periodicCheckForWorkplace() {
+        locationHandler.postDelayed({
+            getLocation()
         },scanInterval)
     }
-
-    private fun periodicCheckForWorkplace() {
-        /*
-        Thread {
-            while (true) {
-                setState(isWithFriends,isAtWork)
-            }
-        }.start()
-        */
-    }
+    */
 
     private fun launchingScreenTimeRecorder() {
         screenTimeHandler.post {
@@ -134,10 +142,6 @@ class BackgroundService() : Service()  {
         }
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
-    }
-
     private val startScanRunnable = Runnable {
         Log.d("devices startscan : ",bluetoothRepository.getDevices().value.toString())
         bluetoothRepository.startScan()
@@ -160,6 +164,19 @@ class BackgroundService() : Service()  {
         scheduleStartAdvertise()
     }
 
+    private val checkForFriendRunnable = Runnable {
+        if (checkForFriends()) {
+            isWithFriends = true
+        }
+        isWithFriends = true
+        setState(isWithFriends,isAtWork)
+        Thread.sleep(scanInterval)
+
+        isWithFriends = false
+        setState(isWithFriends,isAtWork)
+        scheduleCheckForFriends()
+    }
+
     private fun scheduleStartScan(){
         Log.d("bluetooth","scheduled")
         bluetoothHandler.postDelayed(startScanRunnable, scanInterval)
@@ -175,6 +192,10 @@ class BackgroundService() : Service()  {
 
     private fun scheduleStopAdvertise(){
         bluetoothHandler.postDelayed(stopAdvertiseRunnable, scanInterval)
+    }
+
+    private fun scheduleCheckForFriends() {
+        friendHandler.postDelayed(checkForFriendRunnable,scanInterval)
     }
 
     private fun checkForFriends() : Boolean {
@@ -199,17 +220,43 @@ class BackgroundService() : Service()  {
 
     private fun setState(isWithFriends : Boolean, isAtWork : Boolean) {
         if (isAtWork){
-            UserRepository.user.value?.setState(State.WORKING)
+            UserRepository.setState(State.WORKING)
         } else if (isWithFriends){
-            UserRepository.user.value?.setState(State.SOCIALLY_ENGAGED)
+            UserRepository.setState(State.SOCIALLY_ENGAGED)
         } else {
-            UserRepository.user.value?.setState(State.IDLE)
+            UserRepository.setState(State.IDLE)
         }
         userRepository.saveUser()
 
     }
 
-
+    private fun startLocationUpdates() {
+        val locationRequest : LocationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY,1000).build()
+        val locationListener : LocationListener = LocationListener { location ->
+            Log.d("Loc",location.latitude.toString() + " " + location.longitude.toString())
+            UserRepository.setLocation(location)
+        }
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
+        fusedLocationClient.requestLocationUpdates(locationRequest,
+            locationListener,
+            locationThread.looper)
+    }
 
 
 }

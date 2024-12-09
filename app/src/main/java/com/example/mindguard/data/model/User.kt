@@ -1,6 +1,8 @@
 package com.example.mindguard.data.model
 
+import android.location.Location
 import android.util.Log
+import com.google.android.gms.location.FusedLocationProviderClient
 import kotlinx.serialization.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -10,10 +12,10 @@ import java.util.UUID
 class User(val name : String) {
 
     private var id : String =  UUID.randomUUID().toString()
-    private var position : Int = 0
+    private var location : Pair<Double,Double> = Pair(0.0,0.0)
     private var state : State = State.IDLE
     private var _friendList : MutableList<Friend> = mutableListOf()
-    private var workplace : Int = 0
+    private var workplace : MutableSet<Pair<Double,Double>> = mutableSetOf()
     private var usageStats : List<Pair<String,Long>> = listOf()
 
     // screenTimeInfos contains list of pair for each state the user can be in.
@@ -36,8 +38,8 @@ class User(val name : String) {
         return id
     }
 
-    fun getPosition() : Int{
-        return position
+    fun getLocation() : Pair<Double,Double>{
+        return Pair(location.first,location.second)
     }
 
     fun getState() : State {
@@ -49,15 +51,13 @@ class User(val name : String) {
         return immutableFriendList
     }
 
-    fun getWorkplace() : Int{
+    fun getWorkplace() : MutableSet<Pair<Double,Double>>{
         return workplace
     }
 
     fun getUsageStats() : List<Pair<String,Long>> {
         return usageStats
     }
-
-
 
     fun getScreenTimeInfos() : TimeInfo{
         return todayTimeInfo
@@ -91,8 +91,16 @@ class User(val name : String) {
         Log.d("changed state to",newState.toString())
     }
 
-    fun setWorkplace(newWorkplace : Int){
-        workplace = newWorkplace
+    fun setLocation(latitude : Double, longitude : Double){
+        location = Pair(latitude,longitude)
+    }
+
+    fun addWorkplace(latitude : Double, longitude : Double){
+        workplace.add(Pair(latitude,longitude))
+    }
+
+    fun removeWorkplace(latitude : Double, longitude : Double){
+        workplace.remove(Pair(latitude,longitude))
     }
 
     fun setUsageStats(newUsageStats : List<Pair<String,Long>>){

@@ -22,7 +22,6 @@ import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
-import org.w3c.dom.Text
 
 
 class HomeFragment : Fragment() {
@@ -60,6 +59,7 @@ class HomeFragment : Fragment() {
         barChart.xAxis.setDrawGridLines(false)
         barChart.axisLeft.setDrawGridLines(false)
         barChart.axisRight.isEnabled = false  // Désactiver l'axe Y droit
+
 
 
         val idleScreenTimeView: TextView = binding.idleScreenTime

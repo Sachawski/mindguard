@@ -2,6 +2,7 @@ package com.example.mindguard.data.repository
 
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.location.Location
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -18,6 +19,12 @@ class UserRepository(private val filesDir : File) {
     companion object {
         private var _user : MutableLiveData<User> = MutableLiveData<User>()
         var user: MutableLiveData<User> = _user
+
+        fun setLocation(location : Location){
+            user.value?.setLocation(location.latitude,location.longitude)
+            user.postValue(user.value)
+            Log.d("userLoc",user.value!!.getLocation().toString())
+        }
 
         fun setState(state : State){
             user.value?.setState(state)
@@ -36,6 +43,16 @@ class UserRepository(private val filesDir : File) {
 
         fun addScreenTime(timePair : Pair<Long,Long>, state : State){
             user.value?.addScreenTime(timePair,state)
+            user.postValue(user.value)
+        }
+
+        fun addWorkplace(latitude : Double, longitude : Double){
+            user.value?.addWorkplace(latitude,longitude)
+            user.postValue(user.value)
+        }
+
+        fun removeWorkplace(latitude : Double, longitude : Double){
+            user.value?.removeWorkplace(latitude,longitude)
             user.postValue(user.value)
         }
     }

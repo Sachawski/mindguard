@@ -6,9 +6,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.mindguard.BuildConfig
+import com.example.mindguard.data.model.Friend
 import com.example.mindguard.data.model.User
 import com.example.mindguard.data.repository.UserRepository
-import com.tomtom.sdk.map.display.MapOptions
 
 
 class WorkplaceViewModel(application: Application) : AndroidViewModel(application) {
@@ -16,8 +16,6 @@ class WorkplaceViewModel(application: Application) : AndroidViewModel(applicatio
     private val filePath = application.applicationContext.filesDir
     private val userRepository : UserRepository = UserRepository(filePath)
     private var _user : MutableLiveData<User> = MutableLiveData<User>()
-    private val _mapOptions : MapOptions = MapOptions(mapKey = BuildConfig.TOMTOM_API_KEY)
-
 
     private val _text = MutableLiveData<String>().apply {
         value = "Please pin your work location"
@@ -26,6 +24,10 @@ class WorkplaceViewModel(application: Application) : AndroidViewModel(applicatio
 
     init {
         observeData()
+    }
+
+    fun getUser() : LiveData<User>{
+        return _user
     }
 
     private fun observeData(){
@@ -38,9 +40,14 @@ class WorkplaceViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    fun addWorkplaceToUser(latitude : Double, longitude : Double){
+        UserRepository.addWorkplace(latitude,longitude)
+        userRepository.saveUser()
+    }
 
-    fun getMapOptions() : MapOptions {
-        return _mapOptions
+    fun removeWorkplaceToUser(latitude : Double, longitude : Double){
+        UserRepository.removeWorkplace(latitude,longitude)
+        userRepository.saveUser()
     }
 
 }

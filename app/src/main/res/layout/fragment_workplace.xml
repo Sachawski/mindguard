@@ -22,8 +22,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.011" />
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/map_container"
+    <com.kakao.vectormap.MapView
+        android:id="@+id/map_view"
         android:layout_width="338dp"
         android:layout_height="538dp"
         app:layout_constraintBottom_toBottomOf="parent"

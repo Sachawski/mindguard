@@ -3,7 +3,9 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("org.jetbrains.kotlin.plugin.serialization".toString())
 }
-val tomtomApiKey: String by project
+
+val kakaoApiKey: String by project
+
 android {
     namespace = "com.example.mindguard"
     compileSdk = 35
@@ -28,7 +30,7 @@ android {
 
     }
     buildTypes.configureEach {
-        buildConfigField("String", "TOMTOM_API_KEY", "\"$tomtomApiKey\"")
+        buildConfigField("String", "KAKAO_API_KEY", "\"$kakaoApiKey\"")
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -55,11 +57,13 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
-    implementation(libs.map.display)
+    //implementation(libs.map.display)
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.kotlinx.serialization.json)
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("com.kakao.maps.open:android:2.12.8")
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.play.services.location)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
