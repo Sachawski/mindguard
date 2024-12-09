@@ -24,7 +24,6 @@ class FriendsViewModel(private val application: Application) : AndroidViewModel(
         UserRepository.user.observeForever { user ->
             try {
                 _user.value = user
-                Log.d("user changed","in repo")
             } catch (exception : Exception) {
                 Log.d("FriendsVM",exception.toString())
             }

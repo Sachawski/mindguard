@@ -11,26 +11,89 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <com.github.mikephil.charting.charts.BarChart
-            android:id="@+id/barChart"
+        <TextView
+            android:id="@+id/attentionScoreView"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:text="@string/attention_score"
+            android:textColor="@android:color/black"
+            android:padding="8dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHeight_percent="0.4" />
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <TextView
+            android:id="@+id/attention_score_holder"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:text="@string/time_without_your_phone"
+            android:textColor="@android:color/black"
+            android:padding="8dp"
+            app:layout_constraintTop_toBottomOf="@id/attentionScoreView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <TextView
+            android:id="@+id/timeWithoutPhone"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:text="@string/time_without_your_phone"
+            android:textColor="@android:color/black"
+            android:padding="8dp"
+            app:layout_constraintTop_toBottomOf="@id/attention_score_holder"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
         <LinearLayout
-            android:id="@+id/textViewContainer"
+            android:id="@+id/dummy1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/barChart"
+            app:layout_constraintTop_toBottomOf="@id/timeWithoutPhone"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
             <TextView
-                android:id="@+id/idleScreenTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="18sp"
+                android:text="@string/with_friends"
+                android:gravity="center"
+                android:textColor="@android:color/black"
+                android:padding="8dp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="18sp"
+                android:text="@string/at_work"
+                android:gravity="center"
+                android:textColor="@android:color/black"
+                android:padding="8dp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/timeWithoutPhoneContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/dummy1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/socialTime"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -39,6 +102,71 @@
                 android:textColor="@android:color/black"
                 android:background="@drawable/textview_border"
                 android:padding="8dp"/>
+
+            <TextView
+                android:id="@+id/workingTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="18sp"
+                android:gravity="center"
+                android:textColor="@android:color/black"
+                android:background="@drawable/textview_border"
+                android:padding="8dp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/timeWithPhone"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:text="@string/time_with_your_phone"
+            android:textColor="@android:color/black"
+            android:padding="8dp"
+            app:layout_constraintTop_toBottomOf="@id/timeWithoutPhoneContainer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <LinearLayout
+            android:id="@+id/dummy2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/timeWithPhone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="18sp"
+                android:text="@string/with_friends"
+                android:gravity="center"
+                android:textColor="@android:color/black"
+                android:padding="8dp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="18sp"
+                android:text="@string/at_work"
+                android:gravity="center"
+                android:textColor="@android:color/black"
+                android:padding="8dp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/timeWithPhoneContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/dummy2"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
             <TextView
                 android:id="@+id/socialScreenTime"
@@ -52,7 +180,7 @@
                 android:padding="8dp"/>
 
             <TextView
-                android:id="@+id/workScreenTime"
+                android:id="@+id/workingScreenTime"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -61,8 +189,17 @@
                 android:textColor="@android:color/black"
                 android:background="@drawable/textview_border"
                 android:padding="8dp"/>
-
         </LinearLayout>
+
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/barChart"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toBottomOf="@id/timeWithPhoneContainer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_percent="0.4" />
+
 
         <TextView
             android:id="@+id/total_screen_time"
@@ -70,7 +207,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:textSize="24sp"
-            app:layout_constraintTop_toBottomOf="@id/textViewContainer"
+            app:layout_constraintTop_toBottomOf="@id/barChart"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 

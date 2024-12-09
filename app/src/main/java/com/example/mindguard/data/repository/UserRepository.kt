@@ -23,7 +23,6 @@ class UserRepository(private val filesDir : File) {
         fun setLocation(location : Location){
             user.value?.setLocation(location.latitude,location.longitude)
             user.postValue(user.value)
-            Log.d("userLoc",user.value!!.getLocation().toString())
         }
 
         fun setState(state : State){
@@ -41,8 +40,8 @@ class UserRepository(private val filesDir : File) {
             user.postValue(user.value)
         }
 
-        fun addScreenTime(timePair : Pair<Long,Long>, state : State){
-            user.value?.addScreenTime(timePair,state)
+        fun addTimeInfo(timePair : Pair<Long,Long>, state : State){
+            user.value?.addTimeInfo(timePair,state)
             user.postValue(user.value)
         }
 
@@ -61,7 +60,6 @@ class UserRepository(private val filesDir : File) {
         synchronized(this) {
             val serializedUser = filePath.readText()
             val user = Json.decodeFromString<User>(serializedUser)
-            Log.i("deserialized : ", user.toString())
             return user
         }
     }
@@ -69,8 +67,6 @@ class UserRepository(private val filesDir : File) {
     fun initializeUser(name: String): LiveData<User> {
         val newUser = User(name)
         val jsonString = Json.encodeToString(User.serializer(), newUser)
-        Log.i("serialized : ", jsonString)
-        Log.d("path : ", filePath.toString())
         filePath.writeText(jsonString)
         val userLiveData = MutableLiveData<User>()
         userLiveData.value = newUser
@@ -93,8 +89,8 @@ class UserRepository(private val filesDir : File) {
                 val jsonString = Json.encodeToString(User.serializer(), user)
                 filePath.writeText(jsonString)
                 _user.postValue(userLiveData.value)
+                Log.i("SAVE", "user has been saved : $jsonString")
             }
-            Log.i("SAVE","user has been saved : " + _user.value?.getState().toString())
         }
     }
 
@@ -103,8 +99,8 @@ class UserRepository(private val filesDir : File) {
         synchronized(this) {
             val jsonString = Json.encodeToString(User.serializer(), _user.value!!)
             filePath.writeText(jsonString)
+            Log.i("SAVE", "user has been saved : $jsonString")
         }
-        Log.i("SAVE","user has been saved : " + _user.value?.getState().toString())
 
     }
 

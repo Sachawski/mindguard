@@ -13,4 +13,9 @@
     <string name="menu_workplace">Workplace</string>
     <string name="bin">bin</string>
     <string name="name_hint">Enter your friend\'s name</string>
+    <string name="time_without_your_phone">Time without your phone :</string>
+    <string name="time_with_your_phone">Time with your phone</string>
+    <string name="with_friends">with friends :</string>
+    <string name="at_work">at work :</string>
+    <string name="attention_score">Attention Score</string>
 </resources>

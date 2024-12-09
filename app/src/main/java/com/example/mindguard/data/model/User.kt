@@ -1,8 +1,6 @@
 package com.example.mindguard.data.model
 
-import android.location.Location
 import android.util.Log
-import com.google.android.gms.location.FusedLocationProviderClient
 import kotlinx.serialization.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -24,14 +22,20 @@ class User(val name : String) {
     private var todayTimeInfo : TimeInfo = TimeInfo()
     private var timeInfoHistory : MutableList<TimeInfo> = mutableListOf()
     private var todayAttentionScore : Double = 100.0
-    private var AttentionScoreHistory : MutableList<Double> = mutableListOf()
+    private var attentionScoreHistory : MutableList<Double> = mutableListOf()
 
-    private var updateDay : String
+    private var screentimeHistoryUpdateDay : String
+    private var screentimeHistoryCurrentDay : String
+    private var attentionScoreHistoryUpdateDay : String
+    private var attentionScoreHistoryCurrentDay : String
 
     init {
         val currentDate: LocalDate = LocalDate.now()
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        updateDay = currentDate.format(formatter)
+        screentimeHistoryUpdateDay = currentDate.format(formatter)
+        screentimeHistoryCurrentDay = currentDate.format(formatter)
+        attentionScoreHistoryUpdateDay = currentDate.format(formatter)
+        attentionScoreHistoryCurrentDay = currentDate.format(formatter)
     }
 
     fun getId() : String{
@@ -63,32 +67,61 @@ class User(val name : String) {
         return todayTimeInfo
     }
 
-    fun addScreenTime(timePair : Pair<Long,Long>, state : State){
+    fun addScreenTimeInfo(timePair : Pair<Long,Long>, state : State){
         when (state){
-            State.IDLE -> todayTimeInfo.addIdleScreenTime(timePair)
-            State.SOCIALLY_ENGAGED -> todayTimeInfo.addSocialScreenTime(timePair)
-            State.WORKING -> todayTimeInfo.addWorkScreenTime(timePair)
+            State.SOCIALLY_ENGAGED -> {
+                todayTimeInfo.addSocialScreenTime(timePair)
+            }
+            State.WORKING ->{
+                todayTimeInfo.addWorkScreenTime(timePair)
+            }
+            else -> {}
         }
     }
 
-    fun getAttentionScore() {
+    fun addTimeInfo(timePair : Pair<Long,Long>, state : State){
+        when (state){
+            State.SOCIALLY_ENGAGED -> {
+                todayTimeInfo.addSocialTime(timePair)
+            }
+            State.WORKING -> {
+                todayTimeInfo.addWorkTime(timePair)
+            }
+            else -> {}
+        }
+    }
 
+    fun getAttentionScore() : Double{
+        val timeInfo : TimeInfo = getScreenTimeInfos()
+        val screenTimeAtWork = timeInfo.getTotalWorkScreenTime()
+        val timeAtWork = timeInfo.getTotalWorkTime()
+        val screenTimeWithFriends = timeInfo.getTotalSocialScreenTime()
+        val timeWithFriends = timeInfo.getTotalSocialTime()
+        return (((timeAtWork + timeWithFriends) - ( screenTimeAtWork + screenTimeWithFriends)) /
+                (timeAtWork + timeWithFriends)).toDouble()
     }
 
 
     fun screenTimeDailyUpdate(){
-        timeInfoHistory.add(todayTimeInfo)
-        todayTimeInfo = TimeInfo()
+        if (screentimeHistoryCurrentDay == screentimeHistoryUpdateDay) {
+            timeInfoHistory[timeInfoHistory.size-1] = todayTimeInfo
+        } else {
+            timeInfoHistory.add(todayTimeInfo)
+            todayTimeInfo = TimeInfo()
+        }
     }
 
     fun attentionScoreDailyUpdate(){
-        timeInfoHistory.add(todayTimeInfo)
-        todayTimeInfo = TimeInfo()
+        if (attentionScoreHistoryCurrentDay == attentionScoreHistoryUpdateDay) {
+            attentionScoreHistory[attentionScoreHistory.size-1] = todayAttentionScore
+        } else {
+            attentionScoreHistory.add(todayAttentionScore)
+            todayAttentionScore = 100.0
+        }
     }
 
     fun setState(newState : State){
         state = newState
-        Log.d("changed state to",newState.toString())
     }
 
     fun setLocation(latitude : Double, longitude : Double){
@@ -124,6 +157,5 @@ class User(val name : String) {
     fun deleteFriend(friend : Friend){
         _friendList.remove(friend)
     }
-
 
 }

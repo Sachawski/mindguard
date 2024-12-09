@@ -26,7 +26,6 @@ import com.example.mindguard.data.model.ScannedDevice
 class BluetoothRepository(private val context : Context) {
 
 
-    private val packageManager : PackageManager = context.packageManager
     private val bluetoothManager : BluetoothManager? = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?
     private val bluetoothAdapter: BluetoothAdapter? = bluetoothManager?.adapter
     private val bluetoothLeScanner : BluetoothLeScanner? = bluetoothAdapter?.bluetoothLeScanner
@@ -48,7 +47,6 @@ class BluetoothRepository(private val context : Context) {
                         Manifest.permission.BLUETOOTH_CONNECT
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    Log.d("device name to :","nope")
                     return
                 }
             }
@@ -56,13 +54,10 @@ class BluetoothRepository(private val context : Context) {
             val existingDevice = devices.value?.find { it.device.address == device.address }
             val payload : Map<ParcelUuid, ByteArray>? = result.scanRecord?.serviceData
 
-            //Log.d("payload",payload.toString())
             if (payload != null) {
                 for (data in payload){
-                    //Log.d("data",data.toString())
                     val key = data.key.toString() //Service UUID (friend's ID)
                     val value = String(data.value) //Byte array back to string
-                    //Log.d("key/value","$key / $value")
                     if (value.startsWith("mindguard")){
                         if (existingDevice != null) {
                             existingDevice.lastSeen = System.currentTimeMillis()
@@ -89,7 +84,7 @@ class BluetoothRepository(private val context : Context) {
     private val advertiseCallback = object : AdvertiseCallback() {
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
             super.onStartSuccess(settingsInEffect)
-            Log.i("adv","Advertising started successfully")
+            Log.i("BLE_ADV","Advertising started successfully")
         }
 
         override fun onStartFailure(errorCode: Int) {
@@ -124,10 +119,6 @@ class BluetoothRepository(private val context : Context) {
         devices.value = filteredList
     }
 
-    fun deviceHasBLE() : Boolean{
-        return packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
-    }
-
     fun startScan() : Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (ActivityCompat.checkSelfPermission(
@@ -141,7 +132,6 @@ class BluetoothRepository(private val context : Context) {
         val scanFilter = ScanFilter.Builder().build() //dummy manufacturer ID in order to trigger the scan. We need to make the app advertise this.
         val scanSettings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
         bluetoothLeScanner?.startScan(listOf(scanFilter),scanSettings,leScanCallback)
-        Log.d("scanning","Started")
         return true
     }
 

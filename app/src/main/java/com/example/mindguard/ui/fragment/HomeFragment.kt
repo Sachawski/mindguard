@@ -4,7 +4,6 @@ import android.R
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,6 +40,11 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        val attentionScoreView: TextView = binding.attentionScoreHolder
+        homeViewModel.getUser().observe(viewLifecycleOwner) {user ->
+            attentionScoreView.text = user.getAttentionScore().toString()
+        }
+
 
         val barChart : BarChart = binding.barChart
         val entries = mutableListOf<BarEntry>()
@@ -62,19 +66,20 @@ class HomeFragment : Fragment() {
 
 
 
-        val idleScreenTimeView: TextView = binding.idleScreenTime
+        val workTimeView: TextView = binding.workingTime
+        val socialTimeView: TextView = binding.socialTime
+        val workScreenTimeView: TextView = binding.workingScreenTime
         val socialScreenTimeView: TextView = binding.socialScreenTime
-        val workScreenTimeView: TextView = binding.workScreenTime
 
         homeViewModel.getUser().observe(viewLifecycleOwner) { user ->
-            idleScreenTimeView.text =
-                homeViewModel.formatMillisToHoursAndMinutes(user.getScreenTimeInfos().getTotalIdleScreenTime())
-            Log.d("idle",user.getScreenTimeInfos().getTotalIdleScreenTime().toString())
+            socialTimeView.text =
+                homeViewModel.formatMillisToHoursAndMinutes(user.getScreenTimeInfos().getTotalSocialTime())
+            workTimeView.text =
+                homeViewModel.formatMillisToHoursAndMinutes(user.getScreenTimeInfos().getTotalWorkTime())
             socialScreenTimeView.text =
                 homeViewModel.formatMillisToHoursAndMinutes(user.getScreenTimeInfos().getTotalSocialScreenTime())
             workScreenTimeView.text =
                 homeViewModel.formatMillisToHoursAndMinutes(user.getScreenTimeInfos().getTotalWorkScreenTime())
-
         }
 
         val totalScreenTimeView: TextView = binding.totalScreenTime

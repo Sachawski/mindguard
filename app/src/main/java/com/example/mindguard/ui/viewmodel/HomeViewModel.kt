@@ -65,7 +65,7 @@ class HomeViewModel(private val application: Application) : AndroidViewModel(app
             try {
                 _user.value = user
             } catch (exception : Exception) {
-                Log.d("FriendsVM",exception.toString())
+                Log.d("HomeVM",exception.toString())
             }
         }
     }

@@ -4,19 +4,16 @@ package com.example.mindguard.ui.fragment
 import android.R
 import android.app.AlertDialog
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
-import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.transition.Visibility
+import com.example.mindguard.data.model.State
 import com.example.mindguard.databinding.FragmentWorkplaceBinding
 import com.example.mindguard.ui.viewmodel.WorkplaceViewModel
 import com.kakao.vectormap.KakaoMap
@@ -24,13 +21,10 @@ import com.kakao.vectormap.KakaoMapReadyCallback
 import com.kakao.vectormap.LatLng
 import com.kakao.vectormap.MapLifeCycleCallback
 import com.kakao.vectormap.MapView
-import com.kakao.vectormap.camera.CameraPosition
 import com.kakao.vectormap.camera.CameraUpdateFactory
-import com.kakao.vectormap.label.Label
 import com.kakao.vectormap.label.LabelOptions
 import com.kakao.vectormap.label.LabelStyle
 import com.kakao.vectormap.label.LabelStyles
-import com.kakao.vectormap.shape.MapPoints
 
 
 class WorkplaceFragment : Fragment() {
@@ -51,10 +45,26 @@ class WorkplaceFragment : Fragment() {
 
         theContext = this.requireContext()
 
+
+
         val textView: TextView = binding.textWorkplace
         workplaceViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
         }
+
+        val isWithFriendsView: TextView = binding.isAtWorkplace
+        workplaceViewModel.getUser().observe(viewLifecycleOwner){ user ->
+            if (user.getState() == State.WORKING) {
+                    isWithFriendsView.visibility = View.VISIBLE
+                isWithFriendsView.text = "You are at work, you should stop looking at your phone"
+            } else {
+                isWithFriendsView.visibility = View.INVISIBLE
+            }
+            Log.d("ok","displaying")
+            Log.d("ok",user.getState().toString())
+
+        }
+
 
         val mapView: MapView = binding.mapView
         mapView.start(object : MapLifeCycleCallback() {
@@ -77,7 +87,6 @@ class WorkplaceFragment : Fragment() {
                 }
 
                 kakaoMap.setOnMapClickListener { kakaoMap, latLng, pointF, POI ->
-                    Log.d("map", "Click point : $latLng")
                     workplaceViewModel.addWorkplaceToUser(latLng.latitude,latLng.longitude)
                 }
 
@@ -89,7 +98,6 @@ class WorkplaceFragment : Fragment() {
                             kakaoMap.labelManager?.layer!!.remove(label)
                             val latLng : LatLng = label.position
                             workplaceViewModel.removeWorkplaceToUser(latLng.latitude,latLng.longitude)
-                            Log.d("Map", "Label deleted: ${label.toString()}")
                         }
                         setNegativeButton("No", null)
                     }.show()
