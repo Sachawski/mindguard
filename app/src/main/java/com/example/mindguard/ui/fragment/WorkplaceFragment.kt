@@ -60,8 +60,6 @@ class WorkplaceFragment : Fragment() {
             } else {
                 isWithFriendsView.visibility = View.INVISIBLE
             }
-            Log.d("ok","displaying")
-            Log.d("ok",user.getState().toString())
 
         }
 
@@ -76,6 +74,7 @@ class WorkplaceFragment : Fragment() {
         }, object : KakaoMapReadyCallback() {
             override fun onMapReady(kakaoMap: KakaoMap) {
                 val location = workplaceViewModel.getUser().value!!.getLocation()
+                Log.d("Location",location.toString())
                 val defaultPosition = LatLng.from(location.first, location.second)
 
                 kakaoMap.moveCamera(CameraUpdateFactory.newCenterPosition(defaultPosition))

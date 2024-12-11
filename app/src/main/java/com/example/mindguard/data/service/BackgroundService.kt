@@ -256,6 +256,18 @@ class BackgroundService() : Service()  {
     private val checkForWorkplaceRunnable = Runnable    {
 
         if (checkForWorkplace()) {
+            if (recordingFriendTime ) {
+                recordingFriendTime = false
+                friendEndTime = System.currentTimeMillis()
+                var timePair = Pair(friendStartTime,friendEndTime)
+                UserRepository.addTimeInfo(timePair,State.SOCIALLY_ENGAGED)
+                if (recordingFriendScreenTime) {
+                    recordingFriendScreenTime = false
+                    friendScreenEndTime = System.currentTimeMillis()
+                    timePair = Pair(friendScreenStartTime,friendScreenEndTime)
+                    UserRepository.addTimeInfo(timePair,State.SOCIALLY_ENGAGED)
+                }
+            }
             isAtWork = true
             if (isScreenOn && !recordingWorkScreenTime) {
                 //if the screen is turned on, but the screen time recording has not been started
@@ -305,11 +317,6 @@ class BackgroundService() : Service()  {
             recordingWorkTime = false
             recordingWorkScreenTime = false
         }
-        Log.d("recordingWorkScreenTime ", recordingWorkScreenTime.toString())
-        Log.d("recordingWorkTime ", recordingWorkTime.toString())
-        Log.d("workWithoutScreenStartTime ", workStartTime.toString())
-        Log.d("workWithoutScreenEndTime ", workEndTime.toString())
-        Log.d("screen time",UserRepository.user.value!!.getScreenTimeInfos().toString())
         setState()
         scheduleCheckForWorkplace()
     }
@@ -327,7 +334,7 @@ class BackgroundService() : Service()  {
 
                 if (!recordingFriendTime){
                     friendStartTime = System.currentTimeMillis()
-                    recordingWorkTime = true
+                    recordingFriendTime = true
                 } else {
                     friendEndTime = System.currentTimeMillis()
                     val timePair = Pair(friendStartTime, friendEndTime)
@@ -367,12 +374,6 @@ class BackgroundService() : Service()  {
                 recordingFriendTime = false
                 recordingFriendScreenTime = false
             }
-            Log.d("recordingFriendTime ", recordingFriendTime.toString())
-            Log.d("recordingFriendScreenTime ", recordingFriendScreenTime.toString())
-            Log.d("friendStartTime ", friendStartTime.toString())
-            Log.d("friendEndTime ", friendEndTime.toString())
-            Log.d("screen time",UserRepository.user.value!!.getScreenTimeInfos().toString())
-
         }
         scheduleCheckForFriends()
     }
@@ -446,9 +447,12 @@ class BackgroundService() : Service()  {
 
             return
         }
+        Log.i("Location","Starting Location Service")
         fusedLocationClient.requestLocationUpdates(locationRequest,
             locationListener,
             locationThread.looper)
+        Log.i("Location","Location Service Started")
+
     }
 
     private fun latLonToMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {

@@ -51,32 +51,33 @@ class HomeFragment : Fragment() {
 
         val barChart : BarChart = binding.barChart
         val entries = mutableListOf<BarEntry>()
-        val user = homeViewModel.getUser().value!!
-
-        val history = user.getAttentionScoreHistory().toSortedMap()
-        var index = 0
-        for (value in history.values){
-            entries.add(BarEntry(index.toFloat(), value!!.toFloat()))
-            index += 1
-        }
-        val barDataSet = BarDataSet(entries, "History")
-        barDataSet.color = resources.getColor(R.color.holo_purple, null)
-        val barData = BarData(barDataSet)
-        barChart.data = barData
-        barChart.description.text = "Attention Score History"
-        barChart.animateY(1000)
-        barChart.axisLeft.axisMinimum = 0f // Minimum value for y-axis
-        barChart.axisLeft.axisMaximum = 100f // Maximum value for y-axis
-        barChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
-        barChart.xAxis.granularity = 1f
-        barChart.xAxis.valueFormatter = object : ValueFormatter() {
-            override fun getFormattedValue(value: Float): String {
-                return history.keys.toList().getOrNull(value.toInt()) ?: "" // Map index to date
+        val user = homeViewModel.getUser().value
+        if (user != null ) {
+            val history = user.getAttentionScoreHistory().toSortedMap()
+            var index = 0
+            for (value in history.values) {
+                entries.add(BarEntry(index.toFloat(), value!!.toFloat()))
+                index += 1
             }
+            val barDataSet = BarDataSet(entries, "History")
+            barDataSet.color = resources.getColor(R.color.holo_purple, null)
+            val barData = BarData(barDataSet)
+            barChart.data = barData
+            barChart.description.text = "Attention Score History"
+            barChart.animateY(1000)
+            barChart.axisLeft.axisMinimum = 0f // Minimum value for y-axis
+            barChart.axisLeft.axisMaximum = 100f // Maximum value for y-axis
+            barChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+            barChart.xAxis.granularity = 1f
+            barChart.xAxis.valueFormatter = object : ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    return history.keys.toList().getOrNull(value.toInt()) ?: "" // Map index to date
+                }
+            }
+            barChart.xAxis.setDrawGridLines(false)
+            barChart.axisLeft.setDrawGridLines(false)
+            barChart.axisRight.isEnabled = false
         }
-        barChart.xAxis.setDrawGridLines(false)
-        barChart.axisLeft.setDrawGridLines(false)
-        barChart.axisRight.isEnabled = false
 
 
 

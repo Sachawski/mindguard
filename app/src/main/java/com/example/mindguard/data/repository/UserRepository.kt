@@ -17,10 +17,10 @@ class UserRepository(private val filesDir : File) {
     private val filePath: File = File(filesDir, "user.json")
 
     companion object {
-        private var _user : MutableLiveData<User> = MutableLiveData<User>()
-        var user: MutableLiveData<User> = _user
+        var user: MutableLiveData<User> = MutableLiveData<User>()
 
         fun setLocation(location : Location){
+            Log.i("Location","Setting Location")
             user.value?.setLocation(location.latitude,location.longitude)
             user.postValue(user.value)
         }
@@ -93,7 +93,7 @@ class UserRepository(private val filesDir : File) {
         val userLiveData = MutableLiveData<User>()
         val user = loadUserFile()
         userLiveData.value = user
-        _user.postValue(user)
+        UserRepository.user.postValue(user)
         return userLiveData
     }
 
@@ -104,7 +104,7 @@ class UserRepository(private val filesDir : File) {
             synchronized(this) {
                 val jsonString = Json.encodeToString(User.serializer(), user)
                 filePath.writeText(jsonString)
-                _user.postValue(userLiveData.value)
+                UserRepository.user.postValue(userLiveData.value)
                 Log.i("SAVE", "user has been saved : $jsonString")
             }
         }
@@ -113,9 +113,11 @@ class UserRepository(private val filesDir : File) {
     //save the user in the companion object in the file
     fun saveUser() {
         synchronized(this) {
-            val jsonString = Json.encodeToString(User.serializer(), _user.value!!)
-            filePath.writeText(jsonString)
-            Log.i("SAVE", "user has been saved : $jsonString")
+            if (user.value != null) {
+                val jsonString = Json.encodeToString(User.serializer(), user.value!!)
+                filePath.writeText(jsonString)
+                Log.i("SAVE", "user has been saved : $jsonString")
+            }
         }
 
     }
