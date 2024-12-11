@@ -1,20 +1,29 @@
 package com.example.mindguard.data.service
 
 import android.Manifest
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import com.example.mindguard.R
 import com.example.mindguard.data.model.State
+import com.example.mindguard.data.model.User
 import com.example.mindguard.data.repository.BluetoothRepository
 import com.example.mindguard.data.repository.UserRepository
+import com.example.mindguard.ui.activity.MainActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationListener
 import com.google.android.gms.location.LocationRequest
@@ -29,10 +38,13 @@ import kotlin.math.sqrt
 
 class BackgroundService() : Service()  {
 
+    //To save the user periodically, I've arbitrary chosen the screenTimeThread to do it.
+
     private var filePath : File = File("")
     private lateinit var userRepository : UserRepository
     private lateinit var bluetoothRepository : BluetoothRepository
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var notificationManager: NotificationManager
 
     private lateinit var friendThread : HandlerThread
     private lateinit var friendHandler : Handler
@@ -70,7 +82,7 @@ class BackgroundService() : Service()  {
 
     private val scanInterval: Long = 10000
     private val workplaceRadius : Double = 20.0
-
+    private var channel_id : String = ""
     private val locationListener : LocationListener = LocationListener { location ->
         UserRepository.setLocation(location)
     }
@@ -81,7 +93,7 @@ class BackgroundService() : Service()  {
         userRepository = UserRepository(filePath)
         bluetoothRepository = BluetoothRepository(applicationContext)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
+        notificationManager = this.getSystemService(NotificationManager::class.java)
         friendThread = HandlerThread("Friend Thread")
         friendThread.start()
         friendHandler = Handler(friendThread.looper)
@@ -102,7 +114,9 @@ class BackgroundService() : Service()  {
         locationThread.start()
         locationHandler = Handler(locationThread.looper)
 
+        channel_id = createNotificationChannel()
         startLocationService(locationListener)
+        scheduleSaveAttentionScore()
         scheduleStartScan()
         scheduleStartAdvertise()
         scheduleCheckForFriends()
@@ -110,8 +124,38 @@ class BackgroundService() : Service()  {
         launchingScreenTimeRecorder()
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        startForegroundService()
+        // Do your task here (e.g., location tracking, file download)
+        return START_STICKY
+    }
+
+    private fun startForegroundService() {
+        val channelId = "foreground_service_channel"
+        val channelName = "ForegroundService"
+
+        val channel = NotificationChannel(
+            channelId,
+            channelName,
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(channel)
+
+        val notification: Notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Foreground Service")
+            .setContentText("This service is running in the foreground.")
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .build()
+
+        // Start the service in the foreground
+        startForeground(1, notification)
+    }
+
+
     override fun onDestroy() {
         super.onDestroy()
+        userRepository.saveUser()
         fusedLocationClient.removeLocationUpdates(locationListener)
         bluetoothHandler.removeCallbacksAndMessages(null)
         screenTimeHandler.removeCallbacksAndMessages(null)
@@ -147,6 +191,11 @@ class BackgroundService() : Service()  {
                             if (recordingFriendTime) {
                                 friendScreenStartTime = System.currentTimeMillis()
                             }
+                            if (UserRepository.user.value!!.getState() != State.IDLE){
+                                sendNotifications(UserRepository.user.value!!.getState())
+                            } else {
+                                removeNotifications()
+                            }
                         }
                         Intent.ACTION_SCREEN_OFF -> {
                             isScreenOn = false
@@ -157,7 +206,6 @@ class BackgroundService() : Service()  {
                                     timePair,
                                     State.WORKING
                                 )
-                                userRepository.saveUser()
                                 recordingWorkScreenTime = false
                             }
                             if (recordingFriendTime) {
@@ -167,7 +215,6 @@ class BackgroundService() : Service()  {
                                     timePair,
                                     State.SOCIALLY_ENGAGED
                                 )
-                                userRepository.saveUser()
                                 recordingFriendScreenTime = false
                             }
 
@@ -200,7 +247,13 @@ class BackgroundService() : Service()  {
         scheduleStartAdvertise()
     }
 
-    private val checkForWorkplaceRunnable = Runnable {
+    private val saveAttentionScoreAndResetScreenTimeRunnable = Runnable {
+        UserRepository.setAttentionScore()
+        UserRepository.saveAttentionScoreAndResetScreenTime()
+        scheduleSaveAttentionScore()
+    }
+
+    private val checkForWorkplaceRunnable = Runnable    {
 
         if (checkForWorkplace()) {
             isAtWork = true
@@ -216,21 +269,19 @@ class BackgroundService() : Service()  {
             } else {
                 workEndTime = System.currentTimeMillis()
                 val timePair = Pair(workStartTime, workEndTime)
-                UserRepository.user.value!!.addTimeInfo(
+                UserRepository.addTimeInfo(
                     timePair,
                     State.WORKING
                 )
-                userRepository.saveUser()
                 workStartTime = System.currentTimeMillis()
             }
             if (recordingWorkScreenTime){
                 workScreenEndTime = System.currentTimeMillis()
                 val timePair = Pair(workScreenStartTime, workScreenEndTime)
-                UserRepository.user.value!!.addScreenTimeInfo(
+                UserRepository.addScreenTimeInfo(
                     timePair,
                     State.WORKING
                 )
-                userRepository.saveUser()
                 workScreenStartTime = System.currentTimeMillis()
             }
         } else {
@@ -238,20 +289,18 @@ class BackgroundService() : Service()  {
             if (recordingWorkTime){
                 workEndTime = System.currentTimeMillis()
                 val timePair = Pair(workStartTime, workEndTime)
-                UserRepository.user.value!!.addTimeInfo(
+                UserRepository.addTimeInfo(
                     timePair,
                     State.WORKING
                 )
-                userRepository.saveUser()
             }
             if (recordingWorkScreenTime){
                 workScreenEndTime = System.currentTimeMillis()
                 val timePair = Pair(workScreenStartTime, workScreenEndTime)
-                UserRepository.user.value!!.addScreenTimeInfo(
+                UserRepository.addScreenTimeInfo(
                     timePair,
                     State.WORKING
                 )
-                userRepository.saveUser()
             }
             recordingWorkTime = false
             recordingWorkScreenTime = false
@@ -282,21 +331,19 @@ class BackgroundService() : Service()  {
                 } else {
                     friendEndTime = System.currentTimeMillis()
                     val timePair = Pair(friendStartTime, friendEndTime)
-                    UserRepository.user.value!!.addTimeInfo(
+                    UserRepository.addTimeInfo(
                         timePair,
                         State.SOCIALLY_ENGAGED
                     )
-                    userRepository.saveUser()
                     friendStartTime = System.currentTimeMillis()
                 }
                 if (recordingFriendScreenTime){
                     friendScreenEndTime = System.currentTimeMillis()
                     val timePair = Pair(friendScreenStartTime, friendScreenEndTime)
-                    UserRepository.user.value!!.addScreenTimeInfo(
+                    UserRepository.addScreenTimeInfo(
                         timePair,
                         State.SOCIALLY_ENGAGED
                     )
-                    userRepository.saveUser()
                     friendScreenStartTime = System.currentTimeMillis()
                 }
             } else {
@@ -304,20 +351,18 @@ class BackgroundService() : Service()  {
                 if (recordingFriendTime){
                     friendEndTime = System.currentTimeMillis()
                     val timePair = Pair(friendStartTime, friendEndTime)
-                    UserRepository.user.value!!.addTimeInfo(
+                    UserRepository.addTimeInfo(
                         timePair,
                         State.SOCIALLY_ENGAGED
                     )
-                    userRepository.saveUser()
                 }
                 if (recordingFriendScreenTime){
                     friendScreenEndTime = System.currentTimeMillis()
                     val timePair = Pair(friendScreenStartTime, friendScreenEndTime)
-                    UserRepository.user.value!!.addScreenTimeInfo(
+                    UserRepository.addScreenTimeInfo(
                         timePair,
                         State.SOCIALLY_ENGAGED
                     )
-                    userRepository.saveUser()
                 }
                 recordingFriendTime = false
                 recordingFriendScreenTime = false
@@ -330,6 +375,11 @@ class BackgroundService() : Service()  {
 
         }
         scheduleCheckForFriends()
+    }
+
+    private fun scheduleSaveAttentionScore(){
+        userRepository.saveUser()
+        screenTimeHandler.postDelayed(saveAttentionScoreAndResetScreenTimeRunnable,scanInterval)
     }
 
     private fun scheduleStartScan(){
@@ -349,6 +399,7 @@ class BackgroundService() : Service()  {
     }
 
     private fun scheduleCheckForFriends() {
+        Log.d("CheckForFriends","Ping")
         friendHandler.postDelayed(checkForFriendRunnable,scanInterval)
     }
 
@@ -426,6 +477,53 @@ class BackgroundService() : Service()  {
         } else {
             UserRepository.setState(State.IDLE)
         }
+    }
+
+    private fun createNotificationChannel() : String {
+        channel_id = "reminder_channel"
+        val channel = NotificationChannel(channel_id, "Reminder Notification Channel", NotificationManager.IMPORTANCE_DEFAULT)
+        notificationManager.createNotificationChannel(channel)
+        return channel_id
+    }
+
+    private fun sendNotifications(state : State){
+        if (state == State.SOCIALLY_ENGAGED) {
+            val intent = Intent(this, MainActivity::class.java)
+            val pendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val notification = NotificationCompat.Builder(this, channel_id)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("MindGuard reminder")
+                .setContentText("You are with your friends, maybe turn your phone off !")
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT).build()
+            notificationManager.notify(1,notification)
+        } else {
+            val intent = Intent(this, MainActivity::class.java)
+            val pendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val notification = NotificationCompat.Builder(this, channel_id)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("MindGuard reminder")
+                .setContentText("You are at work, maybe turn your phone off !")
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT).build()
+            notificationManager.notify(1,notification)
+        }
+    }
+
+    private fun removeNotifications(){
+        notificationManager.cancelAll()
     }
 
 }

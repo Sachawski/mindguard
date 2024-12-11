@@ -40,7 +40,8 @@ class HomeViewModel(private val application: Application) : AndroidViewModel(app
 
             // launch background service when user is loaded
             val serviceIntent = Intent(this.application, BackgroundService::class.java)
-            this.application.startService(serviceIntent)
+            this.application.startForegroundService(serviceIntent)
+
         }
     }
 

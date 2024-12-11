@@ -45,6 +45,11 @@ class UserRepository(private val filesDir : File) {
             user.postValue(user.value)
         }
 
+        fun addScreenTimeInfo(timePair : Pair<Long,Long>, state : State){
+            user.value?.addScreenTimeInfo(timePair,state)
+            user.postValue(user.value)
+        }
+
         fun addWorkplace(latitude : Double, longitude : Double){
             user.value?.addWorkplace(latitude,longitude)
             user.postValue(user.value)
@@ -54,6 +59,17 @@ class UserRepository(private val filesDir : File) {
             user.value?.removeWorkplace(latitude,longitude)
             user.postValue(user.value)
         }
+
+        fun saveAttentionScoreAndResetScreenTime(){
+            user.value?.attentionScoreUpdate()
+            user.postValue(user.value)
+        }
+
+        fun setAttentionScore(){
+            user.value?.setAttentionScore()
+            user.postValue(user.value)
+        }
+
     }
 
     private fun loadUserFile(): User {

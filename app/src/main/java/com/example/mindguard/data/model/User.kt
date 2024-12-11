@@ -20,22 +20,15 @@ class User(val name : String) {
     // Those pairs contains a start time and a end time, allowing to compute the total screen time
     // for a given state
     private var todayTimeInfo : TimeInfo = TimeInfo()
-    private var timeInfoHistory : MutableList<TimeInfo> = mutableListOf()
     private var todayAttentionScore : Double = 100.0
-    private var attentionScoreHistory : MutableList<Double> = mutableListOf()
+    private var attentionScoreHistory : HashMap<String,Double> = hashMapOf()
 
-    private var screentimeHistoryUpdateDay : String
-    private var screentimeHistoryCurrentDay : String
     private var attentionScoreHistoryUpdateDay : String
-    private var attentionScoreHistoryCurrentDay : String
 
     init {
         val currentDate: LocalDate = LocalDate.now()
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        screentimeHistoryUpdateDay = currentDate.format(formatter)
-        screentimeHistoryCurrentDay = currentDate.format(formatter)
         attentionScoreHistoryUpdateDay = currentDate.format(formatter)
-        attentionScoreHistoryCurrentDay = currentDate.format(formatter)
     }
 
     fun getId() : String{
@@ -91,33 +84,50 @@ class User(val name : String) {
         }
     }
 
-    fun getAttentionScore() : Double{
-        val timeInfo : TimeInfo = getScreenTimeInfos()
-        val screenTimeAtWork = timeInfo.getTotalWorkScreenTime()
-        val timeAtWork = timeInfo.getTotalWorkTime()
-        val screenTimeWithFriends = timeInfo.getTotalSocialScreenTime()
-        val timeWithFriends = timeInfo.getTotalSocialTime()
-        return (((timeAtWork + timeWithFriends) - ( screenTimeAtWork + screenTimeWithFriends)) /
-                (timeAtWork + timeWithFriends)).toDouble()
-    }
-
-
-    fun screenTimeDailyUpdate(){
-        if (screentimeHistoryCurrentDay == screentimeHistoryUpdateDay) {
-            timeInfoHistory[timeInfoHistory.size-1] = todayTimeInfo
-        } else {
-            timeInfoHistory.add(todayTimeInfo)
-            todayTimeInfo = TimeInfo()
-        }
-    }
-
-    fun attentionScoreDailyUpdate(){
-        if (attentionScoreHistoryCurrentDay == attentionScoreHistoryUpdateDay) {
-            attentionScoreHistory[attentionScoreHistory.size-1] = todayAttentionScore
-        } else {
-            attentionScoreHistory.add(todayAttentionScore)
+    fun setAttentionScore(){
+        val timeInfo: TimeInfo = getScreenTimeInfos()
+        val screenTimeAtWork = timeInfo.getTotalWorkScreenTime().toDouble()
+        val timeAtWork = timeInfo.getTotalWorkTime().toDouble()
+        val screenTimeWithFriends = timeInfo.getTotalSocialScreenTime().toDouble()
+        val timeWithFriends = timeInfo.getTotalSocialTime().toDouble()
+        if (timeAtWork + timeWithFriends > 0) {
+            if ((((timeAtWork + timeWithFriends) - (screenTimeAtWork + screenTimeWithFriends)) / (timeAtWork + timeWithFriends)) * 100 < 0){
+                todayAttentionScore = 0.0
+            } else {
+                todayAttentionScore = (((timeAtWork + timeWithFriends) - (screenTimeAtWork + screenTimeWithFriends)) / (timeAtWork + timeWithFriends)) * 100
+            }
+        }else {
             todayAttentionScore = 100.0
         }
+    }
+
+    fun getAttentionScore() : Double {
+        return todayAttentionScore
+
+    }
+
+    fun attentionScoreUpdate(){
+        val currentDate: LocalDate = LocalDate.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val currentDay = currentDate.format(formatter)
+        Log.d("update day ",attentionScoreHistoryUpdateDay)
+        Log.d("current day",currentDay)
+
+        if (currentDay == attentionScoreHistoryUpdateDay) {
+            attentionScoreHistory[currentDay] = todayAttentionScore
+        } else {
+            attentionScoreHistory[currentDay] = todayAttentionScore
+            attentionScoreHistoryUpdateDay = currentDay
+            todayAttentionScore = 100.0
+            todayTimeInfo = TimeInfo()
+        }
+        Log.d("todayAttentionScore",todayAttentionScore.toString())
+        Log.d("history",attentionScoreHistory.toString())
+
+    }
+
+    fun getAttentionScoreHistory() : HashMap<String,Double> {
+        return attentionScoreHistory
     }
 
     fun setState(newState : State){

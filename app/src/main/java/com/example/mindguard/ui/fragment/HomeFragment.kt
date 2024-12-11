@@ -14,6 +14,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.example.mindguard.data.repository.UserRepository
 import com.example.mindguard.databinding.FragmentHomeBinding
 import com.example.mindguard.ui.viewmodel.HomeViewModel
 import com.github.mikephil.charting.charts.BarChart
@@ -21,6 +22,7 @@ import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.formatter.ValueFormatter
 
 
 class HomeFragment : Fragment() {
@@ -42,27 +44,39 @@ class HomeFragment : Fragment() {
 
         val attentionScoreView: TextView = binding.attentionScoreHolder
         homeViewModel.getUser().observe(viewLifecycleOwner) {user ->
-            attentionScoreView.text = user.getAttentionScore().toString()
+            attentionScoreView.text = String.format("%.2f", user.getAttentionScore())  +" %"
+            attentionScoreView.textSize = 20f
         }
 
 
         val barChart : BarChart = binding.barChart
         val entries = mutableListOf<BarEntry>()
-        entries.add(BarEntry(0f, 10f)) // x = 0, y = 10
-        entries.add(BarEntry(1f, 20f)) // x = 1, y = 20
-        entries.add(BarEntry(2f, 15f)) // x = 2, y = 15
-        entries.add(BarEntry(3f, 25f)) // x = 3, y = 25
-        val barDataSet = BarDataSet(entries, "My Data Set")
-        barDataSet.color = resources.getColor(R.color.holo_purple, null)  // Couleur des barres
+        val user = homeViewModel.getUser().value!!
+
+        val history = user.getAttentionScoreHistory().toSortedMap()
+        var index = 0
+        for (value in history.values){
+            entries.add(BarEntry(index.toFloat(), value!!.toFloat()))
+            index += 1
+        }
+        val barDataSet = BarDataSet(entries, "History")
+        barDataSet.color = resources.getColor(R.color.holo_purple, null)
         val barData = BarData(barDataSet)
         barChart.data = barData
-        barChart.description.text = "Example BarChart"  // Description
-        barChart.animateY(1000)  // Animation sur l'axe Y
-        // Configurer les axes (facultatif)
+        barChart.description.text = "Attention Score History"
+        barChart.animateY(1000)
+        barChart.axisLeft.axisMinimum = 0f // Minimum value for y-axis
+        barChart.axisLeft.axisMaximum = 100f // Maximum value for y-axis
         barChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        barChart.xAxis.granularity = 1f
+        barChart.xAxis.valueFormatter = object : ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                return history.keys.toList().getOrNull(value.toInt()) ?: "" // Map index to date
+            }
+        }
         barChart.xAxis.setDrawGridLines(false)
         barChart.axisLeft.setDrawGridLines(false)
-        barChart.axisRight.isEnabled = false  // Désactiver l'axe Y droit
+        barChart.axisRight.isEnabled = false
 
 
 
