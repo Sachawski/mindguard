@@ -67,8 +67,6 @@ class BluetoothRepository(private val context : Context) {
                     }
                 }
             }
-
-            cleanUpDeviceList()
         }
         override fun onScanFailed(errorCode: Int) {
             when (errorCode) {
@@ -116,10 +114,11 @@ class BluetoothRepository(private val context : Context) {
     private fun cleanUpDeviceList() {
         val currentTime = System.currentTimeMillis()
         val filteredList = devices.value?.filter { currentTime - it.lastSeen <= expirationTime } ?: emptyList()
-        devices.value = filteredList
+        devices.postValue(filteredList)
     }
 
     fun startScan() : Boolean {
+        cleanUpDeviceList()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (ActivityCompat.checkSelfPermission(
                     context,
